@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowchart Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Courier+Prime&family=Verdana&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #0d0d1a;
+            color: #00f0ff;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background-color: #1a1a2e;
+            cursor: default;
+        }
+        .neon-glow {
+            box-shadow: 0 0 5px #00f0ff, 0 0 10px #00f0ff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
+        }
+        .context-menu {
+            position: absolute;
+            background-color: rgba(13, 13, 26, 0.9);
+            border: 1px solid #00f0ff;
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 1000;
+            box-shadow: 0 0 15px #ff00ff;
+        }
+        .context-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            color: #00f0ff;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .context-menu-item:hover {
+            background-color: #ff00ff;
+            color: #0d0d1a;
+        }
+        #color-picker {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            border: none;
+            visibility: hidden;
+        }
+        #main-title:focus {
+            outline: 1px dashed #ff00ff;
+            background-color: rgba(255, 0, 255, 0.1);
+        }
+        .inline-editor {
+            position: absolute;
+            background-color: #1a1a2e;
+            border: 2px solid #ff00ff;
+            text-align: center;
+            padding: 5px;
+            z-index: 10;
+            box-sizing: border-box;
+            resize: none;
+            overflow: hidden;
+        }
+        .control-input {
+            background-color: #1a1a2e;
+            border: 1px solid #ff00ff;
+            color: #00f0ff;
+            border-radius: 4px;
+            padding: 4px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- Header -->
+    <header class="p-4 bg-opacity-50 bg-black text-center border-b-2 border-pink-500 shadow-lg" style="box-shadow: 0 0 20px #ff00ff;">
+        <h1 id="main-title" contenteditable="true" class="text-3xl font-bold tracking-widest text-cyan-300" style="text-shadow: 0 0 10px #00f0ff;">Flowchart Maker</h1>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-grow flex relative">
+        <!-- Controls -->
+        <div id="controls-panel" class="w-80 p-4 bg-opacity-30 bg-black border-r-2 border-pink-500 flex flex-col space-y-4 overflow-y-auto" style="box-shadow: 0 0 20px #ff00ff;">
+            <div>
+                <h3 class="font-bold mb-2 text-pink-400 text-lg">Controls</h3>
+                <button id="add-node-btn" class="w-full bg-cyan-500 text-black font-bold py-2 px-4 rounded-lg neon-glow transition-transform transform hover:scale-105">
+                    Add New Node
+                </button>
+            </div>
+            <!-- Text Options Panel -->
+            <div id="text-options-panel" class="hidden border-t border-pink-500/50 pt-4 space-y-3">
+                <h3 class="font-bold text-pink-400 text-lg">Text Options</h3>
+                <div>
+                    <label for="font-family-select" class="block text-sm font-medium text-cyan-200 mb-1">Font Family</label>
+                    <select id="font-family-select" class="control-input">
+                        <option style="font-family: 'Orbitron', sans-serif;">Orbitron</option>
+                        <option style="font-family: 'Courier Prime', monospace;">Courier Prime</option>
+                        <option style="font-family: 'Verdana', sans-serif;">Verdana</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="font-size-input" class="block text-sm font-medium text-cyan-200 mb-1">Font Size</label>
+                    <input type="number" id="font-size-input" class="control-input" min="8" max="72" value="14">
+                </div>
+            </div>
+            <div>
+                <h3 class="font-bold mt-4 mb-2 text-pink-400">Instructions:</h3>
+                <ul class="list-disc list-inside text-sm space-y-1 text-cyan-200">
+                    <li>Hover over a node to see connection ports.</li>
+                    <li>Click a port to start a line, release over a node to connect.</li>
+                    <li>Click a node to select it and show resize handle.</li>
+                    <li>Double-click empty space to create a node.</li>
+                    <li>Double-click text to edit it in place.</li>
+                    <li>Right-click for more options.</li>
+                    <li>Press Delete/Backspace to remove a selected item.</li>
+                    <li>Ctrl+Z to Undo, Ctrl+Y to Redo.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Canvas Area -->
+        <div id="canvas-container" class="flex-grow relative">
+            <canvas id="flowchart-canvas"></canvas>
+            <div id="context-menu" class="context-menu hidden"></div>
+            <input type="color" id="color-picker">
+            <div class="absolute bottom-2 right-3 text-xs text-cyan-500 opacity-50 pointer-events-none font-sans">
+                Made by 0x6B73
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('flowchart-canvas');
+        const canvasContainer = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        const addNodeBtn = document.getElementById('add-node-btn');
+        const contextMenu = document.getElementById('context-menu');
+        const colorPicker = document.getElementById('color-picker');
+        const mainTitle = document.getElementById('main-title');
+        const textOptionsPanel = document.getElementById('text-options-panel');
+        const fontFamilySelect = document.getElementById('font-family-select');
+        const fontSizeInput = document.getElementById('font-size-input');
+
+        // --- State ---
+        let nodes = [];
+        let connections = [];
+        let labels = [];
+        let nextNodeId = 0;
+        let nextLabelId = 0;
+        let nextConnectionId = 0;
+        
+        // History state for undo/redo
+        let history = [];
+        let historyIndex = -1;
+        
+        // Interaction state
+        let action = 'none';
+        let selectedItem = null; 
+        let hoveredNode = null;
+        let startConnectionInfo = null;
+        let dragOffsetX, dragOffsetY;
+        let lastMousePos = { x: 0, y: 0 };
+        let lastRightClickPos = { x: 0, y: 0 };
+        let editingItem = null;
+        let inlineEditor = null;
+
+        // --- Constants ---
+        const PORT_RADIUS = 8;
+        const RESIZE_HANDLE_SIZE = 10;
+        const MIN_NODE_WIDTH = 60;
+        const MIN_NODE_HEIGHT = 40;
+        const HOVER_PADDING = 5;
+
+        // --- History Management ---
+        function saveState() {
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            
+            const currentState = {
+                nodes: JSON.parse(JSON.stringify(nodes)),
+                connections: JSON.parse(JSON.stringify(connections)),
+                labels: JSON.parse(JSON.stringify(labels)),
+                nextNodeId,
+                nextLabelId,
+                nextConnectionId
+            };
+            history.push(currentState);
+            historyIndex++;
+        }
+
+        function loadState(state) {
+            nodes = JSON.parse(JSON.stringify(state.nodes));
+            connections = JSON.parse(JSON.stringify(state.connections));
+            labels = JSON.parse(JSON.stringify(state.labels));
+            nextNodeId = state.nextNodeId;
+            nextLabelId = state.nextLabelId;
+            nextConnectionId = state.nextConnectionId;
+            
+            selectedItem = null;
+            updateTextControls();
+            draw();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                loadState(history[historyIndex]);
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                loadState(history[historyIndex]);
+            }
+        }
+
+        // --- Canvas and Drawing ---
+        function resizeCanvas() {
+            const parent = canvas.parentElement;
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawConnections();
+            drawNodes();
+            drawLabels();
+            drawConnectionPreview();
+        }
+        
+        function drawLabels() {
+            labels.forEach(label => {
+                const isSelected = selectedItem && selectedItem.type === 'label' && selectedItem.id === label.id;
+                ctx.fillStyle = isSelected ? '#ff00ff' : label.color;
+                ctx.font = `${label.fontSize}px ${label.fontFamily}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = isSelected ? '#ff00ff' : label.color;
+                ctx.shadowBlur = 5;
+                if (!(editingItem && editingItem.type === 'label' && editingItem.id === label.id)) {
+                    wrapText(ctx, label.text, label.x, label.y, 200, label.fontSize * 1.2);
+                }
+                ctx.shadowColor = 'transparent';
+            });
+        }
+
+        function getPortPosition(node, port) {
+            switch (port) {
+                case 'top': return { x: node.x + node.width / 2, y: node.y };
+                case 'right': return { x: node.x + node.width, y: node.y + node.height / 2 };
+                case 'bottom': return { x: node.x + node.width / 2, y: node.y + node.height };
+                case 'left': return { x: node.x, y: node.y + node.height / 2 };
+                default: return { x: node.x, y: node.y };
+            }
+        }
+
+        function drawNodes() {
+            nodes.forEach(node => {
+                const isSelected = selectedItem && selectedItem.type === 'node' && selectedItem.id === node.id;
+                ctx.fillStyle = '#1a1a2e';
+                ctx.strokeStyle = isSelected ? '#ff00ff' : node.color;
+                ctx.lineWidth = isSelected ? 3 : 2;
+                ctx.shadowColor = isSelected ? '#ff00ff' : node.color;
+                ctx.shadowBlur = 10;
+                roundRect(ctx, node.x, node.y, node.width, node.height, 10);
+                ctx.fill();
+                ctx.stroke();
+                
+                ctx.shadowColor = 'transparent';
+
+                ctx.fillStyle = node.color;
+                ctx.font = `${node.fontSize}px ${node.fontFamily}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                if (!(editingItem && editingItem.type === 'node' && editingItem.id === node.id)) {
+                     wrapText(ctx, node.text, node.x + node.width / 2, node.y + node.height / 2, node.width - 20, node.fontSize * 1.2);
+                }
+
+                if (hoveredNode && hoveredNode.id === node.id) {
+                    ['top', 'right', 'bottom', 'left'].forEach(port => {
+                        const pos = getPortPosition(node, port);
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, PORT_RADIUS, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#00f0ff';
+                        ctx.fill();
+                    });
+                }
+                
+                if (isSelected) {
+                    ctx.fillStyle = '#ff00ff';
+                    ctx.fillRect(node.x + node.width - RESIZE_HANDLE_SIZE / 2, node.y + node.height - RESIZE_HANDLE_SIZE / 2, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
+                }
+            });
+        }
+
+        function drawConnections() {
+            connections.forEach(conn => {
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+                if (!fromNode || !toNode) return;
+
+                const startPos = getPortPosition(fromNode, conn.fromPort);
+                const endPos = getPortPosition(toNode, conn.toPort);
+
+                const isSelected = selectedItem && selectedItem.type === 'connection' && selectedItem.id === conn.id;
+                const color = conn.color || '#ff00ff';
+                ctx.strokeStyle = isSelected ? '#ffff00' : color;
+                ctx.lineWidth = isSelected ? 4 : 2;
+                ctx.shadowColor = isSelected ? '#ffff00' : color;
+                ctx.shadowBlur = 5;
+
+                ctx.beginPath();
+                ctx.moveTo(startPos.x, startPos.y);
+                
+                const { cp1, cp2 } = getBezierControlPoints(startPos, endPos, conn.fromPort, conn.toPort);
+                ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPos.x, endPos.y);
+                ctx.stroke();
+                
+                const angle = Math.atan2(endPos.y - cp2.y, endPos.x - cp2.x);
+                drawArrowhead(ctx, endPos.x, endPos.y, angle, ctx.strokeStyle);
+                
+                ctx.shadowColor = 'transparent';
+            });
+        }
+
+        function drawConnectionPreview() {
+            if (action !== 'connecting' || !startConnectionInfo) return;
+
+            const fromNode = nodes.find(n => n.id === startConnectionInfo.nodeId);
+            if (!fromNode) return;
+
+            const startPos = getPortPosition(fromNode, startConnectionInfo.port);
+            let endPos = lastMousePos;
+
+            const targetNode = hoveredNode && hoveredNode.id !== startConnectionInfo.nodeId ? hoveredNode : null;
+
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2;
+            
+            if (targetNode) {
+                const toPort = getNearestPort(targetNode, lastMousePos);
+                endPos = getPortPosition(targetNode, toPort);
+                const { cp1, cp2 } = getBezierControlPoints(startPos, endPos, startConnectionInfo.port, toPort);
+                
+                ctx.strokeStyle = '#00ff00';
+                ctx.shadowColor = '#00ff00';
+                ctx.shadowBlur = 5;
+
+                ctx.beginPath();
+                ctx.moveTo(startPos.x, startPos.y);
+                ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, endPos.x, endPos.y);
+                ctx.stroke();
+            } else {
+                ctx.strokeStyle = '#ff00ff';
+                ctx.shadowColor = 'transparent';
+                ctx.beginPath();
+                ctx.moveTo(startPos.x, startPos.y);
+                ctx.lineTo(endPos.x, endPos.y);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+            ctx.shadowColor = 'transparent';
+        }
+        
+        function drawArrowhead(ctx, x, y, angle, color) {
+            const headlen = 10;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - headlen * Math.cos(angle - Math.PI / 6), y - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x - headlen * Math.cos(angle + Math.PI / 6), y - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            let lines = [];
+            for(let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = context.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+            const startY = y - (lines.length - 1) * lineHeight / 2;
+            for(let i = 0; i < lines.length; i++) {
+                context.fillText(lines[i].trim(), x, startY + i * lineHeight);
+            }
+        }
+
+        // --- Item Management Logic ---
+        function addNode(x = 50, y = 50, text = `Node ${nextNodeId + 1}`) {
+            const newNode = { id: nextNodeId++, type: 'node', x, y, width: 150, height: 80, text, color: '#00f0ff', fontSize: 14, fontFamily: 'Orbitron' };
+            nodes.push(newNode);
+            saveState();
+            draw();
+            return newNode;
+        }
+        
+        function addLabel(x, y, text = 'Label') {
+            const newLabel = { id: nextLabelId++, type: 'label', x, y, text, color: '#00f0ff', fontSize: 14, fontFamily: 'Orbitron' };
+            labels.push(newLabel);
+            saveState();
+            draw();
+            return newLabel;
+        }
+
+        function deleteItem(item) {
+            if (!item) return;
+            if (item.type === 'node') {
+                nodes = nodes.filter(n => n.id !== item.id);
+                connections = connections.filter(c => c.from !== item.id && c.to !== item.id);
+            } else if (item.type === 'label') {
+                labels = labels.filter(l => l.id !== item.id);
+            } else if (item.type === 'connection') {
+                connections = connections.filter(c => c.id !== item.id);
+            }
+            if (selectedItem && selectedItem.id === item.id) {
+                selectedItem = null;
+                updateTextControls();
+            }
+            saveState();
+            draw();
+        }
+
+        function startInlineEditing(item) {
+            if (inlineEditor) finishInlineEditing(); 
+
+            editingItem = item;
+            draw(); 
+
+            inlineEditor = document.createElement('textarea');
+            inlineEditor.className = 'inline-editor';
+            inlineEditor.value = item.text;
+            inlineEditor.style.color = item.color;
+            inlineEditor.style.fontFamily = item.fontFamily;
+            inlineEditor.style.fontSize = `${item.fontSize}px`;
+
+            if (item.type === 'node') {
+                inlineEditor.style.left = `${item.x + 5}px`;
+                inlineEditor.style.top = `${item.y + 5}px`;
+                inlineEditor.style.width = `${item.width - 10}px`;
+                inlineEditor.style.height = `${item.height - 10}px`;
+            } else { // label
+                ctx.font = `${item.fontSize}px ${item.fontFamily}`;
+                const metrics = ctx.measureText(item.text);
+                const textWidth = metrics.width + 20;
+                inlineEditor.style.width = `${textWidth}px`;
+                inlineEditor.style.height = `${item.fontSize * 2.5}px`;
+                inlineEditor.style.left = `${item.x - textWidth / 2}px`;
+                inlineEditor.style.top = `${item.y - (item.fontSize * 1.25)}px`;
+            }
+            
+            canvasContainer.appendChild(inlineEditor);
+            inlineEditor.focus();
+            inlineEditor.select();
+
+            inlineEditor.addEventListener('blur', finishInlineEditing);
+            inlineEditor.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    finishInlineEditing();
+                }
+                if (e.key === 'Escape') {
+                    editingItem = null; 
+                    finishInlineEditing(false);
+                }
+            });
+        }
+
+        function finishInlineEditing(saveChanges = true) {
+            if (!inlineEditor) return;
+
+            if (saveChanges && editingItem) {
+                editingItem.text = inlineEditor.value;
+                saveState();
+            }
+            
+            if (inlineEditor.parentElement === canvasContainer) {
+                 canvasContainer.removeChild(inlineEditor);
+            }
+
+            inlineEditor = null;
+            editingItem = null;
+            draw();
+        }
+        
+        function updateTextControls() {
+            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label')) {
+                textOptionsPanel.classList.remove('hidden');
+                fontFamilySelect.value = selectedItem.fontFamily;
+                fontSizeInput.value = selectedItem.fontSize;
+            } else {
+                textOptionsPanel.classList.add('hidden');
+            }
+        }
+
+        // --- Event Handlers ---
+        addNodeBtn.addEventListener('click', () => addNode());
+        
+        mainTitle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                mainTitle.blur();
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            if (inlineEditor) {
+                return; 
+            }
+            if (editingItem) return;
+            
+            const pos = getMousePos(e);
+            
+            if (selectedItem && selectedItem.type === 'node') {
+                const handleX = selectedItem.x + selectedItem.width;
+                const handleY = selectedItem.y + selectedItem.height;
+                if (pos.x >= handleX - RESIZE_HANDLE_SIZE / 2 && pos.x <= handleX + RESIZE_HANDLE_SIZE / 2 &&
+                    pos.y >= handleY - RESIZE_HANDLE_SIZE / 2 && pos.y <= handleY + RESIZE_HANDLE_SIZE / 2) {
+                    action = 'resizing';
+                    return;
+                }
+            }
+
+            if (hoveredNode) {
+                for (const port of ['top', 'right', 'bottom', 'left']) {
+                    const portPos = getPortPosition(hoveredNode, port);
+                    if (distance(pos, portPos) <= PORT_RADIUS) {
+                        action = 'connecting';
+                        startConnectionInfo = { nodeId: hoveredNode.id, port: port };
+                        return;
+                    }
+                }
+            }
+
+            const clickedItem = getItemAtPos(pos);
+            selectedItem = clickedItem;
+            updateTextControls();
+            
+            if (clickedItem) {
+                action = 'dragging';
+                dragOffsetX = pos.x - clickedItem.x;
+                dragOffsetY = pos.y - clickedItem.y;
+            } else {
+                action = 'none';
+            }
+            draw();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            lastMousePos = getMousePos(e);
+            
+            const handle = selectedItem && selectedItem.type === 'node' ? getResizeHandleAtPos(lastMousePos, selectedItem) : null;
+            const item = getItemAtPos(lastMousePos);
+            if (handle) canvas.style.cursor = 'se-resize';
+            else if (item) canvas.style.cursor = 'move';
+            else canvas.style.cursor = 'default';
+
+            if (action === 'dragging' && selectedItem) {
+                selectedItem.x = lastMousePos.x - dragOffsetX;
+                selectedItem.y = lastMousePos.y - dragOffsetY;
+            } else if (action === 'resizing' && selectedItem && selectedItem.type === 'node') {
+                selectedItem.width = Math.max(MIN_NODE_WIDTH, lastMousePos.x - selectedItem.x);
+                selectedItem.height = Math.max(MIN_NODE_HEIGHT, lastMousePos.y - selectedItem.y);
+            } else {
+                const previouslyHovered = hoveredNode;
+                hoveredNode = nodes.find(node => isPointNearNode(lastMousePos, node)) || null;
+                if (previouslyHovered !== hoveredNode || action === 'connecting') {
+                    draw();
+                }
+                return;
+            }
+            draw();
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (action === 'connecting' && startConnectionInfo) {
+                const pos = getMousePos(e);
+                const targetNode = nodes.find(node => isPointInNode(pos, node));
+                if (targetNode && targetNode.id !== startConnectionInfo.nodeId) {
+                    const toPort = getNearestPort(targetNode, pos);
+                    connections.push({ id: nextConnectionId++, type: 'connection', from: startConnectionInfo.nodeId, to: targetNode.id, fromPort: startConnectionInfo.port, toPort, color: '#ff00ff' });
+                    saveState();
+                }
+            } else if (action === 'dragging' || action === 'resizing') {
+                saveState();
+            }
+            action = 'none';
+            draw();
+        });
+        
+        canvas.addEventListener('dblclick', (e) => {
+            const pos = getMousePos(e);
+            const clickedItem = getItemAtPos(pos);
+            if (clickedItem) {
+                if (clickedItem.type === 'node' || clickedItem.type === 'label') {
+                    startInlineEditing(clickedItem);
+                }
+            } else {
+                addNode(pos.x, pos.y);
+            }
+        });
+
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const pos = getMousePos(e);
+            lastRightClickPos = pos;
+            const item = getItemAtPos(pos);
+            selectedItem = item;
+            updateTextControls();
+            
+            contextMenu.style.left = `${pos.x}px`;
+            contextMenu.style.top = `${pos.y}px`;
+            contextMenu.classList.remove('hidden');
+            
+            if (item) {
+                if (item.type === 'node') {
+                    contextMenu.innerHTML = `<div class="context-menu-item" data-action="edit">Edit Node</div><div class="context-menu-item" data-action="change-color">Change Color</div><div class="context-menu-item" data-action="delete">Delete Node</div>`;
+                } else if (item.type === 'label') {
+                    contextMenu.innerHTML = `<div class="context-menu-item" data-action="edit">Edit Label</div><div class="context-menu-item" data-action="change-color">Change Color</div><div class="context-menu-item" data-action="delete">Delete Label</div>`;
+                } else if (item.type === 'connection') {
+                    contextMenu.innerHTML = `<div class="context-menu-item" data-action="change-color">Change Color</div><div class="context-menu-item" data-action="delete">Delete Connection</div>`;
+                }
+            } else {
+                contextMenu.innerHTML = `<div class="context-menu-item" data-action="add-node">New Node Here</div><div class="context-menu-item" data-action="add-label">Add Text Label</div><div class="context-menu-item" data-action="reset">Reset Canvas</div>`;
+            }
+            draw();
+        });
+
+        contextMenu.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            if (!action) return;
+
+            if (selectedItem) {
+                switch(action) {
+                    case 'edit': startInlineEditing(selectedItem); break;
+                    case 'change-color': 
+                        if(selectedItem.type === 'node' || selectedItem.type === 'label' || selectedItem.type === 'connection') {
+                            colorPicker.style.left = `${lastRightClickPos.x}px`;
+                            colorPicker.style.top = `${lastRightClickPos.y}px`;
+                            setTimeout(() => {
+                                colorPicker.click();
+                            }, 0);
+                        }
+                        break;
+                    case 'delete': deleteItem(selectedItem); break;
+                }
+            } else {
+                const pos = lastRightClickPos;
+                switch(action) {
+                    case 'add-node': addNode(pos.x, pos.y); break;
+                    case 'add-label': addLabel(pos.x, pos.y); break;
+                    case 'reset':
+                        if(confirm('Are you sure?')) {
+                            nodes = []; connections = []; labels = []; nextNodeId = 0; nextLabelId = 0; nextConnectionId = 0;
+                            saveState();
+                        }
+                        break;
+                }
+            }
+            contextMenu.classList.add('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target !== contextMenu && !contextMenu.contains(e.target)) {
+                 contextMenu.classList.add('hidden');
+            }
+            if (inlineEditor && e.target !== inlineEditor) {
+                finishInlineEditing();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                undo();
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+            } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (document.activeElement === mainTitle || document.activeElement === inlineEditor) {
+                    return;
+                }
+                if (selectedItem) {
+                    e.preventDefault(); 
+                    deleteItem(selectedItem);
+                }
+            }
+        });
+        
+        colorPicker.addEventListener('input', (e) => {
+            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label' || selectedItem.type === 'connection')) {
+                selectedItem.color = e.target.value;
+                draw();
+                saveState();
+            }
+        });
+        
+        fontFamilySelect.addEventListener('input', (e) => {
+            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label')) {
+                selectedItem.fontFamily = e.target.value;
+                draw();
+                saveState();
+            }
+        });
+        
+        fontSizeInput.addEventListener('input', (e) => {
+            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label')) {
+                selectedItem.fontSize = parseInt(e.target.value, 10);
+                draw();
+                saveState();
+            }
+        });
+
+        // --- Utility Functions ---
+        function getMousePos(e) { const rect = canvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+        function isPointInNode(pos, node) { return pos.x > node.x && pos.x < node.x + node.width && pos.y > node.y && pos.y < node.y + node.height; }
+        function isPointNearNode(pos, node) {
+            return pos.x > node.x - HOVER_PADDING && pos.x < node.x + node.width + HOVER_PADDING &&
+                   pos.y > node.y - HOVER_PADDING && pos.y < node.y + node.height + HOVER_PADDING;
+        }
+        function isPointInLabel(pos, label) {
+            ctx.font = `${label.fontSize}px ${label.fontFamily}`; 
+            const metrics = ctx.measureText(label.text); 
+            const width = metrics.width; 
+            const height = label.fontSize * 1.2;
+            return pos.x > label.x - width / 2 && pos.x < label.x + width / 2 && pos.y > label.y - height / 2 && pos.y < label.y + height / 2;
+        }
+        function getResizeHandleAtPos(pos, node) {
+            const handleX = node.x + node.width; const handleY = node.y + node.height;
+            if (pos.x >= handleX - RESIZE_HANDLE_SIZE && pos.x <= handleX + RESIZE_HANDLE_SIZE && pos.y >= handleY - RESIZE_HANDLE_SIZE && pos.y <= handleY + RESIZE_HANDLE_SIZE) {
+                return 'se';
+            }
+            return null;
+        }
+        function getItemAtPos(pos) {
+            const selectedNode = selectedItem && selectedItem.type === 'node' ? selectedItem : null;
+            if (selectedNode && getResizeHandleAtPos(pos, selectedNode)) {
+                 return selectedNode;
+            }
+            for (let i = nodes.length - 1; i >= 0; i--) {
+                if (isPointInNode(pos, nodes[i])) return nodes[i];
+            }
+            for (let i = labels.length - 1; i >= 0; i--) {
+                if (isPointInLabel(pos, labels[i])) return labels[i];
+            }
+            for (const conn of connections) if (isPointOnConnection(pos, conn)) return conn;
+            return null;
+        }
+        function distance(p1, p2) { return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2); }
+        function getBezierControlPoints(startPos, endPos, fromPort, toPort) {
+            let cp1 = { ...startPos }, cp2 = { ...endPos };
+            const offset = Math.max(50, distance(startPos, endPos) / 3);
+            if (fromPort === 'right') cp1.x += offset; else if (fromPort === 'left') cp1.x -= offset;
+            if (fromPort === 'top') cp1.y -= offset; else if (fromPort === 'bottom') cp1.y += offset;
+            if (toPort === 'right') cp2.x += offset; else if (toPort === 'left') cp2.x -= offset;
+            if (toPort === 'top') cp2.y -= offset; else if (toPort === 'bottom') cp2.y += offset;
+            return { cp1, cp2 };
+        }
+        function isPointOnConnection(p, conn) {
+            const fromNode = nodes.find(n => n.id === conn.from);
+            const toNode = nodes.find(n => n.id === conn.to);
+            if (!fromNode || !toNode) return false;
+
+            const p0 = getPortPosition(fromNode, conn.fromPort);
+            const p3 = getPortPosition(toNode, conn.toPort);
+            const { cp1: p1, cp2: p2 } = getBezierControlPoints(p0, p3, conn.fromPort, conn.toPort);
+
+            for (let t = 0; t <= 1; t += 0.05) {
+                const onCurve = {
+                    x: (1-t)**3*p0.x + 3*(1-t)**2*t*p1.x + 3*(1-t)*t**2*p2.x + t**3*p3.x,
+                    y: (1-t)**3*p0.y + 3*(1-t)**2*t*p1.y + 3*(1-t)*t**2*p2.y + t**3*p3.y
+                };
+                if (distance(p, onCurve) < 5) return true;
+            }
+            return false;
+        }
+        function getNearestPort(node, pos) {
+            const dists = {
+                top: Math.abs(pos.y - node.y),
+                bottom: Math.abs(pos.y - (node.y + node.height)),
+                left: Math.abs(pos.x - node.x), 
+                right: Math.abs(pos.x - (node.x + node.width))
+            };
+            return Object.keys(dists).reduce((a, b) => dists[a] < dists[b] ? a : b);
+        }
+
+        // --- Initial Setup ---
+        window.addEventListener('resize', resizeCanvas);
+        
+        window.onload = function() {
+            resizeCanvas();
+            if (nodes.length === 0) {
+                saveState(); 
+                addNode(canvas.width / 2 - 75, canvas.height / 3, "Start");
+            }
+        };
+    </script>
+</body>
+</html>
