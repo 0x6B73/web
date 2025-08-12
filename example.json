@@ -1,0 +1,449 @@
+{
+  "nodes": [
+    {
+      "id": 0,
+      "type": "node",
+      "x": 845,
+      "y": 72.33333333333331,
+      "width": 150,
+      "height": 80,
+      "text": "Phishing Email (Important invoice)",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 1,
+      "type": "node",
+      "x": 803,
+      "y": 221,
+      "width": 232,
+      "height": 83,
+      "text": "badsite.example.com/something.php",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 2,
+      "type": "node",
+      "x": 843,
+      "y": 382,
+      "width": 150,
+      "height": 80,
+      "text": "Invoice.docm",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 3,
+      "type": "node",
+      "x": 688,
+      "y": 534,
+      "width": 150,
+      "height": 80,
+      "text": "50.256.45.120",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 4,
+      "type": "node",
+      "x": 996,
+      "y": 530,
+      "width": 150,
+      "height": 80,
+      "text": "cmd.exe",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 5,
+      "type": "node",
+      "x": 582,
+      "y": 682,
+      "width": 150,
+      "height": 80,
+      "text": "reverse.exe",
+      "color": "#ff0000",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 6,
+      "type": "node",
+      "x": 1263,
+      "y": 465,
+      "width": 150,
+      "height": 80,
+      "text": "user jdoe added",
+      "color": "#ff0000",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 7,
+      "type": "node",
+      "x": 1482,
+      "y": 465,
+      "width": 150,
+      "height": 80,
+      "text": "jdoe added to local admin",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 8,
+      "type": "node",
+      "x": 1263,
+      "y": 617,
+      "width": 150,
+      "height": 80,
+      "text": "domain name enumerated",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 9,
+      "type": "node",
+      "x": 464,
+      "y": 836,
+      "width": 150,
+      "height": 80,
+      "text": "cobalt strike beacon to 50.256.45.120",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 10,
+      "type": "node",
+      "x": 698,
+      "y": 833,
+      "width": 150,
+      "height": 80,
+      "text": "reg run key added. Start reverse.exe  on boot",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 11,
+      "type": "node",
+      "x": 1724,
+      "y": 616,
+      "width": 150,
+      "height": 80,
+      "text": "POST request to 50.256.45.12/acme_DA",
+      "color": "#ff0000",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 12,
+      "type": "node",
+      "x": 1486,
+      "y": 617,
+      "width": 150,
+      "height": 80,
+      "text": "Domain Admins enumerated",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 13,
+      "type": "node",
+      "x": 1171,
+      "y": 746,
+      "width": 150,
+      "height": 80,
+      "text": "mimikatz.exe",
+      "color": "#ff0000",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 14,
+      "type": "node",
+      "x": 1402,
+      "y": 746,
+      "width": 150,
+      "height": 80,
+      "text": "hsjkd237.tmp",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    }
+  ],
+  "connections": [
+    {
+      "id": 1,
+      "type": "connection",
+      "from": 5,
+      "to": 9,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 2,
+      "type": "connection",
+      "from": 5,
+      "to": 10,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 3,
+      "type": "connection",
+      "from": 3,
+      "to": 5,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 4,
+      "type": "connection",
+      "from": 2,
+      "to": 3,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 5,
+      "type": "connection",
+      "from": 2,
+      "to": 4,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 6,
+      "type": "connection",
+      "from": 4,
+      "to": 6,
+      "fromPort": "right",
+      "toPort": "left",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 7,
+      "type": "connection",
+      "from": 4,
+      "to": 8,
+      "fromPort": "right",
+      "toPort": "left",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 8,
+      "type": "connection",
+      "from": 6,
+      "to": 7,
+      "fromPort": "right",
+      "toPort": "left",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 9,
+      "type": "connection",
+      "from": 1,
+      "to": 2,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 10,
+      "type": "connection",
+      "from": 0,
+      "to": 1,
+      "fromPort": "bottom",
+      "toPort": "top",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 11,
+      "type": "connection",
+      "from": 8,
+      "to": 12,
+      "fromPort": "right",
+      "toPort": "left",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 12,
+      "type": "connection",
+      "from": 12,
+      "to": 11,
+      "fromPort": "right",
+      "toPort": "left",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 13,
+      "type": "connection",
+      "from": 10,
+      "to": 5,
+      "fromPort": "top",
+      "toPort": "right",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 14,
+      "type": "connection",
+      "from": 4,
+      "to": 13,
+      "fromPort": "bottom",
+      "toPort": "left",
+      "color": "#ff00ff"
+    },
+    {
+      "id": 15,
+      "type": "connection",
+      "from": 13,
+      "to": 14,
+      "fromPort": "right",
+      "toPort": "left",
+      "color": "#ff00ff"
+    }
+  ],
+  "labels": [
+    {
+      "id": 0,
+      "type": "label",
+      "x": 977,
+      "y": 344,
+      "text": "Downloaded",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 1,
+      "type": "label",
+      "x": 993,
+      "y": 189,
+      "text": "User Clicked Link",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 2,
+      "type": "label",
+      "x": 1072,
+      "y": 484,
+      "text": "Hidden window",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 3,
+      "type": "label",
+      "x": 763,
+      "y": 489,
+      "text": "Web request",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 4,
+      "type": "label",
+      "x": 628,
+      "y": 639,
+      "text": "Download Payload",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 5,
+      "type": "label",
+      "x": 731,
+      "y": 779,
+      "text": "Persistence",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 6,
+      "type": "label",
+      "x": 531,
+      "y": 791,
+      "text": "Remote Access",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 7,
+      "type": "label",
+      "x": 1167,
+      "y": 647,
+      "text": "Enumeration",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 8,
+      "type": "label",
+      "x": 1202,
+      "y": 494,
+      "text": "Persistence",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 9,
+      "type": "label",
+      "x": 1470,
+      "y": 396,
+      "text": "",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 10,
+      "type": "label",
+      "x": 1009,
+      "y": 725,
+      "text": "Download files to appdata",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    },
+    {
+      "id": 11,
+      "type": "label",
+      "x": 1359,
+      "y": 768,
+      "text": "Saved to",
+      "color": "#00f0ff",
+      "fontSize": 14,
+      "fontFamily": "Orbitron"
+    }
+  ],
+  "nextNodeId": 16,
+  "nextLabelId": 12,
+  "nextConnectionId": 16,
+  "recentColors": [
+    "#ff0000"
+  ]
+}
