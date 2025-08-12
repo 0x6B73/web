@@ -145,7 +145,7 @@
             <div id="context-menu" class="context-menu hidden"></div>
             <input type="color" id="color-picker">
             <div class="absolute bottom-2 right-3 text-xs text-cyan-500 opacity-50 pointer-events-none font-sans">
-                Made by 0x6b73
+                Made by Gemini
             </div>
         </div>
     </div>
@@ -182,15 +182,16 @@
         
         // Interaction state
         let action = 'none';
-        let selectedItem = null; 
-        let itemToColor = null; // Decouples color picking from selection
+        let selectedItems = []; 
+        let itemToColor = null;
         let hoveredNode = null;
         let startConnectionInfo = null;
-        let dragOffsetX, dragOffsetY;
+        let dragStartPos = { x: 0, y: 0 };
         let lastMousePos = { x: 0, y: 0 };
         let lastRightClickPos = { x: 0, y: 0 };
         let editingItem = null;
         let inlineEditor = null;
+        let selectionBox = null;
 
         // --- Constants ---
         const PORT_RADIUS = 8;
@@ -227,7 +228,7 @@
             nextConnectionId = state.nextConnectionId;
             recentColors = JSON.parse(JSON.stringify(state.recentColors || []));
             
-            selectedItem = null;
+            selectedItems = [];
             updateTextControls();
             updateRecentColorsUI();
             draw();
@@ -261,11 +262,12 @@
             drawNodes();
             drawLabels();
             drawConnectionPreview();
+            drawSelectionBox();
         }
         
         function drawLabels() {
             labels.forEach(label => {
-                const isSelected = selectedItem && selectedItem.type === 'label' && selectedItem.id === label.id;
+                const isSelected = selectedItems.some(item => item.type === 'label' && item.id === label.id);
                 ctx.fillStyle = isSelected ? '#ff00ff' : label.color;
                 ctx.font = `${label.fontSize}px ${label.fontFamily}`;
                 ctx.textAlign = 'center';
@@ -291,7 +293,7 @@
 
         function drawNodes() {
             nodes.forEach(node => {
-                const isSelected = selectedItem && selectedItem.type === 'node' && selectedItem.id === node.id;
+                const isSelected = selectedItems.some(item => item.type === 'node' && item.id === node.id);
                 ctx.fillStyle = '#1a1a2e';
                 ctx.strokeStyle = isSelected ? '#ff00ff' : node.color;
                 ctx.lineWidth = isSelected ? 3 : 2;
@@ -321,7 +323,7 @@
                     });
                 }
                 
-                if (isSelected) {
+                if (isSelected && selectedItems.length === 1) {
                     ctx.fillStyle = '#ff00ff';
                     ctx.fillRect(node.x + node.width - RESIZE_HANDLE_SIZE / 2, node.y + node.height - RESIZE_HANDLE_SIZE / 2, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
                 }
@@ -337,7 +339,7 @@
                 const startPos = getPortPosition(fromNode, conn.fromPort);
                 const endPos = getPortPosition(toNode, conn.toPort);
 
-                const isSelected = selectedItem && selectedItem.type === 'connection' && selectedItem.id === conn.id;
+                const isSelected = selectedItems.some(item => item.type === 'connection' && item.id === conn.id);
                 const color = conn.color || '#ff00ff';
                 ctx.strokeStyle = isSelected ? '#ffff00' : color;
                 ctx.lineWidth = isSelected ? 4 : 2;
@@ -396,6 +398,18 @@
             
             ctx.setLineDash([]);
             ctx.shadowColor = 'transparent';
+        }
+        
+        function drawSelectionBox() {
+            if (selectionBox) {
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.fillRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
+                ctx.strokeRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
+                ctx.setLineDash([]);
+            }
         }
         
         function drawArrowhead(ctx, x, y, angle, color) {
@@ -471,10 +485,32 @@
             } else if (item.type === 'connection') {
                 connections = connections.filter(c => c.id !== item.id);
             }
-            if (selectedItem && selectedItem.id === item.id) {
-                selectedItem = null;
+            if (selectedItems.some(i => i.id === item.id)) {
+                selectedItems = [];
                 updateTextControls();
             }
+            saveState();
+            draw();
+        }
+        
+        function deleteSelectedItems() {
+            if (selectedItems.length === 0) return;
+            const idsToDelete = new Set(selectedItems.map(item => item.id));
+            const typesToDelete = new Set(selectedItems.map(item => item.type));
+
+            if (typesToDelete.has('node')) {
+                nodes = nodes.filter(n => !idsToDelete.has(n.id));
+                connections = connections.filter(c => !idsToDelete.has(c.from) && !idsToDelete.has(c.to));
+            }
+            if (typesToDelete.has('label')) {
+                labels = labels.filter(l => !idsToDelete.has(l.id));
+            }
+            if (typesToDelete.has('connection')) {
+                connections = connections.filter(c => !idsToDelete.has(c.id));
+            }
+
+            selectedItems = [];
+            updateTextControls();
             saveState();
             draw();
         }
@@ -542,10 +578,11 @@
         }
         
         function updateTextControls() {
-            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label')) {
+            if (selectedItems.length > 0 && selectedItems.every(i => i.type === 'node' || i.type === 'label')) {
                 textOptionsPanel.classList.remove('hidden');
-                fontFamilySelect.value = selectedItem.fontFamily;
-                fontSizeInput.value = selectedItem.fontSize;
+                const firstItem = selectedItems[0];
+                fontFamilySelect.value = firstItem.fontFamily;
+                fontSizeInput.value = firstItem.fontSize;
             } else {
                 textOptionsPanel.classList.add('hidden');
             }
@@ -558,8 +595,8 @@
                 swatch.className = 'w-8 h-8 rounded-full border-2 border-cyan-500/50 cursor-pointer';
                 swatch.style.backgroundColor = color;
                 swatch.addEventListener('click', () => {
-                    if (selectedItem) {
-                        selectedItem.color = color;
+                    if (selectedItems.length > 0) {
+                        selectedItems.forEach(item => item.color = color);
                         draw();
                         saveState();
                     }
@@ -629,16 +666,17 @@
 
         canvas.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
-            if (inlineEditor) {
-                return; 
-            }
+            if (inlineEditor) return; 
             if (editingItem) return;
             
             const pos = getMousePos(e);
+            dragStartPos = pos;
             
-            if (selectedItem && selectedItem.type === 'node') {
-                const handleX = selectedItem.x + selectedItem.width;
-                const handleY = selectedItem.y + selectedItem.height;
+            // Resize logic
+            if (selectedItems.length === 1 && selectedItems[0].type === 'node') {
+                const node = selectedItems[0];
+                const handleX = node.x + node.width;
+                const handleY = node.y + node.height;
                 if (pos.x >= handleX - RESIZE_HANDLE_SIZE / 2 && pos.x <= handleX + RESIZE_HANDLE_SIZE / 2 &&
                     pos.y >= handleY - RESIZE_HANDLE_SIZE / 2 && pos.y <= handleY + RESIZE_HANDLE_SIZE / 2) {
                     action = 'resizing';
@@ -646,6 +684,7 @@
                 }
             }
 
+            // Connection logic
             if (hoveredNode) {
                 for (const port of ['top', 'right', 'bottom', 'left']) {
                     const portPos = getPortPosition(hoveredNode, port);
@@ -658,34 +697,49 @@
             }
 
             const clickedItem = getItemAtPos(pos);
-            selectedItem = clickedItem;
-            updateTextControls();
             
             if (clickedItem) {
                 action = 'dragging';
-                dragOffsetX = pos.x - clickedItem.x;
-                dragOffsetY = pos.y - clickedItem.y;
+                if (!selectedItems.some(item => item.id === clickedItem.id && item.type === clickedItem.type)) {
+                    selectedItems = [clickedItem];
+                }
+                // Store initial positions for group drag
+                selectedItems.forEach(item => {
+                    item.dragStartX = item.x;
+                    item.dragStartY = item.y;
+                });
             } else {
-                action = 'none';
+                action = 'selecting';
+                selectedItems = [];
+                selectionBox = { x: pos.x, y: pos.y, width: 0, height: 0 };
             }
+            updateTextControls();
             draw();
         });
 
         canvas.addEventListener('mousemove', (e) => {
             lastMousePos = getMousePos(e);
             
-            const handle = selectedItem && selectedItem.type === 'node' ? getResizeHandleAtPos(lastMousePos, selectedItem) : null;
+            const handle = selectedItems.length === 1 && selectedItems[0].type === 'node' ? getResizeHandleAtPos(lastMousePos, selectedItems[0]) : null;
             const item = getItemAtPos(lastMousePos);
             if (handle) canvas.style.cursor = 'se-resize';
             else if (item) canvas.style.cursor = 'move';
             else canvas.style.cursor = 'default';
 
-            if (action === 'dragging' && selectedItem) {
-                selectedItem.x = lastMousePos.x - dragOffsetX;
-                selectedItem.y = lastMousePos.y - dragOffsetY;
-            } else if (action === 'resizing' && selectedItem && selectedItem.type === 'node') {
-                selectedItem.width = Math.max(MIN_NODE_WIDTH, lastMousePos.x - selectedItem.x);
-                selectedItem.height = Math.max(MIN_NODE_HEIGHT, lastMousePos.y - selectedItem.y);
+            if (action === 'dragging' && selectedItems.length > 0) {
+                const dx = lastMousePos.x - dragStartPos.x;
+                const dy = lastMousePos.y - dragStartPos.y;
+                selectedItems.forEach(item => {
+                    item.x = item.dragStartX + dx;
+                    item.y = item.dragStartY + dy;
+                });
+            } else if (action === 'resizing' && selectedItems.length === 1 && selectedItems[0].type === 'node') {
+                const node = selectedItems[0];
+                node.width = Math.max(MIN_NODE_WIDTH, lastMousePos.x - node.x);
+                node.height = Math.max(MIN_NODE_HEIGHT, lastMousePos.y - node.y);
+            } else if (action === 'selecting') {
+                selectionBox.width = lastMousePos.x - selectionBox.x;
+                selectionBox.height = lastMousePos.y - selectionBox.y;
             } else {
                 const previouslyHovered = hoveredNode;
                 hoveredNode = nodes.find(node => isPointNearNode(lastMousePos, node)) || null;
@@ -708,6 +762,9 @@
                 }
             } else if (action === 'dragging' || action === 'resizing') {
                 saveState();
+            } else if (action === 'selecting') {
+                selectItemsInBox();
+                selectionBox = null;
             }
             action = 'none';
             draw();
@@ -730,7 +787,14 @@
             const pos = getMousePos(e);
             lastRightClickPos = pos;
             const item = getItemAtPos(pos);
-            selectedItem = item;
+            
+            // If right-clicking an unselected item, make it the only selection
+            if (item && !selectedItems.some(i => i.id === item.id && i.type === item.type)) {
+                selectedItems = [item];
+            } else if (!item) {
+                selectedItems = [];
+            }
+
             updateTextControls();
             
             contextMenu.style.left = `${pos.x}px`;
@@ -755,12 +819,12 @@
             const action = e.target.dataset.action;
             if (!action) return;
 
-            if (selectedItem) {
+            if (selectedItems.length > 0) {
                 switch(action) {
-                    case 'edit': startInlineEditing(selectedItem); break;
+                    case 'edit': if (selectedItems.length === 1) startInlineEditing(selectedItems[0]); break;
                     case 'change-color': 
-                        if(selectedItem.type === 'node' || selectedItem.type === 'label' || selectedItem.type === 'connection') {
-                            itemToColor = selectedItem; // Set the item to be colored
+                        if (selectedItems.length > 0) {
+                            itemToColor = [...selectedItems]; // Copy the array
                             colorPicker.style.left = `${lastRightClickPos.x}px`;
                             colorPicker.style.top = `${lastRightClickPos.y}px`;
                             setTimeout(() => {
@@ -768,7 +832,7 @@
                             }, 0);
                         }
                         break;
-                    case 'delete': deleteItem(selectedItem); break;
+                    case 'delete': deleteSelectedItems(); break;
                 }
             } else {
                 const pos = lastRightClickPos;
@@ -806,17 +870,17 @@
                 if (document.activeElement === mainTitle || document.activeElement === inlineEditor) {
                     return;
                 }
-                if (selectedItem) {
+                if (selectedItems.length > 0) {
                     e.preventDefault(); 
-                    deleteItem(selectedItem);
+                    deleteSelectedItems();
                 }
             }
         });
         
         colorPicker.addEventListener('change', (e) => {
-            if (itemToColor) {
+            if (itemToColor && itemToColor.length > 0) {
                 const newColor = e.target.value;
-                itemToColor.color = newColor;
+                itemToColor.forEach(item => item.color = newColor);
 
                 let updatedRecentColors = recentColors.filter(c => c !== newColor);
                 updatedRecentColors.unshift(newColor);
@@ -825,21 +889,30 @@
                 updateRecentColorsUI();
                 draw();
                 saveState();
-                itemToColor = null; // Reset after use
+                itemToColor = null;
             }
         });
         
         fontFamilySelect.addEventListener('input', (e) => {
-            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label')) {
-                selectedItem.fontFamily = e.target.value;
+            if (selectedItems.length > 0) {
+                selectedItems.forEach(item => {
+                    if (item.type === 'node' || item.type === 'label') {
+                        item.fontFamily = e.target.value;
+                    }
+                });
                 draw();
                 saveState();
             }
         });
         
         fontSizeInput.addEventListener('input', (e) => {
-            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label')) {
-                selectedItem.fontSize = parseInt(e.target.value, 10);
+            if (selectedItems.length > 0) {
+                const newSize = parseInt(e.target.value, 10);
+                selectedItems.forEach(item => {
+                    if (item.type === 'node' || item.type === 'label') {
+                        item.fontSize = newSize;
+                    }
+                });
                 draw();
                 saveState();
             }
@@ -867,9 +940,8 @@
             return null;
         }
         function getItemAtPos(pos) {
-            const selectedNode = selectedItem && selectedItem.type === 'node' ? selectedItem : null;
-            if (selectedNode && getResizeHandleAtPos(pos, selectedNode)) {
-                 return selectedNode;
+            if (selectedItems.length === 1 && selectedItems[0].type === 'node' && getResizeHandleAtPos(pos, selectedItems[0])) {
+                 return selectedItems[0];
             }
             for (let i = nodes.length - 1; i >= 0; i--) {
                 if (isPointInNode(pos, nodes[i])) return nodes[i];
@@ -880,6 +952,29 @@
             for (const conn of connections) if (isPointOnConnection(pos, conn)) return conn;
             return null;
         }
+        
+        function selectItemsInBox() {
+            if (!selectionBox) return;
+            const x1 = Math.min(selectionBox.x, selectionBox.x + selectionBox.width);
+            const y1 = Math.min(selectionBox.y, selectionBox.y + selectionBox.height);
+            const x2 = Math.max(selectionBox.x, selectionBox.x + selectionBox.width);
+            const y2 = Math.max(selectionBox.y, selectionBox.y + selectionBox.height);
+            
+            selectedItems = [];
+            
+            nodes.forEach(node => {
+                if (node.x < x2 && node.x + node.width > x1 && node.y < y2 && node.y + node.height > y1) {
+                    selectedItems.push(node);
+                }
+            });
+            labels.forEach(label => {
+                if (label.x > x1 && label.x < x2 && label.y > y1 && label.y < y2) {
+                    selectedItems.push(label);
+                }
+            });
+            updateTextControls();
+        }
+        
         function distance(p1, p2) { return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2); }
         function getBezierControlPoints(startPos, endPos, fromPort, toPort) {
             let cp1 = { ...startPos }, cp2 = { ...endPos };
@@ -925,10 +1020,9 @@
             resizeCanvas();
             if (nodes.length === 0) {
                 saveState(); 
-                addNode(canvas.width / 2 - 75, canvas.height / 3, "Start");
+                addNode(canvas.width / 2 - 75, canvas.height / 3, "Start: Incident Reported");
             }
         };
     </script>
 </body>
 </html>
-
