@@ -90,6 +90,24 @@
                     Add New Node
                 </button>
             </div>
+             <!-- File Operations -->
+            <div class="border-t border-pink-500/50 pt-4 space-y-2">
+                <h3 class="font-bold text-pink-400 text-lg">File</h3>
+                <button id="save-btn" class="w-full bg-green-500 text-black font-bold py-2 px-4 rounded-lg neon-glow transition-transform transform hover:scale-105">
+                    Save Flowchart
+                </button>
+                <button id="load-btn" class="w-full bg-purple-500 text-black font-bold py-2 px-4 rounded-lg neon-glow transition-transform transform hover:scale-105">
+                    Load Flowchart
+                </button>
+                <input type="file" id="file-loader" class="hidden" accept=".json">
+            </div>
+            <!-- Recent Colors -->
+            <div id="recent-colors-panel" class="border-t border-pink-500/50 pt-4 space-y-2">
+                <h3 class="font-bold text-pink-400 text-lg">Recent Colors</h3>
+                <div id="recent-colors-swatches" class="flex space-x-2">
+                    <!-- Swatches will be added here by JS -->
+                </div>
+            </div>
             <!-- Text Options Panel -->
             <div id="text-options-panel" class="hidden border-t border-pink-500/50 pt-4 space-y-3">
                 <h3 class="font-bold text-pink-400 text-lg">Text Options</h3>
@@ -127,7 +145,7 @@
             <div id="context-menu" class="context-menu hidden"></div>
             <input type="color" id="color-picker">
             <div class="absolute bottom-2 right-3 text-xs text-cyan-500 opacity-50 pointer-events-none font-sans">
-                Made by 0x6B73
+                Made by 0x6b73
             </div>
         </div>
     </div>
@@ -138,17 +156,22 @@
         const canvasContainer = document.getElementById('canvas-container');
         const ctx = canvas.getContext('2d');
         const addNodeBtn = document.getElementById('add-node-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const loadBtn = document.getElementById('load-btn');
+        const fileLoader = document.getElementById('file-loader');
         const contextMenu = document.getElementById('context-menu');
         const colorPicker = document.getElementById('color-picker');
         const mainTitle = document.getElementById('main-title');
         const textOptionsPanel = document.getElementById('text-options-panel');
         const fontFamilySelect = document.getElementById('font-family-select');
         const fontSizeInput = document.getElementById('font-size-input');
+        const recentColorsSwatches = document.getElementById('recent-colors-swatches');
 
         // --- State ---
         let nodes = [];
         let connections = [];
         let labels = [];
+        let recentColors = [];
         let nextNodeId = 0;
         let nextLabelId = 0;
         let nextConnectionId = 0;
@@ -160,6 +183,7 @@
         // Interaction state
         let action = 'none';
         let selectedItem = null; 
+        let itemToColor = null; // Decouples color picking from selection
         let hoveredNode = null;
         let startConnectionInfo = null;
         let dragOffsetX, dragOffsetY;
@@ -187,7 +211,8 @@
                 labels: JSON.parse(JSON.stringify(labels)),
                 nextNodeId,
                 nextLabelId,
-                nextConnectionId
+                nextConnectionId,
+                recentColors: JSON.parse(JSON.stringify(recentColors))
             };
             history.push(currentState);
             historyIndex++;
@@ -200,9 +225,11 @@
             nextNodeId = state.nextNodeId;
             nextLabelId = state.nextLabelId;
             nextConnectionId = state.nextConnectionId;
+            recentColors = JSON.parse(JSON.stringify(state.recentColors || []));
             
             selectedItem = null;
             updateTextControls();
+            updateRecentColorsUI();
             draw();
         }
 
@@ -523,9 +550,75 @@
                 textOptionsPanel.classList.add('hidden');
             }
         }
+        
+        function updateRecentColorsUI() {
+            recentColorsSwatches.innerHTML = ''; // Clear existing swatches
+            recentColors.forEach(color => {
+                const swatch = document.createElement('button');
+                swatch.className = 'w-8 h-8 rounded-full border-2 border-cyan-500/50 cursor-pointer';
+                swatch.style.backgroundColor = color;
+                swatch.addEventListener('click', () => {
+                    if (selectedItem) {
+                        selectedItem.color = color;
+                        draw();
+                        saveState();
+                    }
+                });
+                recentColorsSwatches.appendChild(swatch);
+            });
+        }
 
         // --- Event Handlers ---
         addNodeBtn.addEventListener('click', () => addNode());
+        
+        saveBtn.addEventListener('click', () => {
+            const dataToSave = {
+                nodes,
+                connections,
+                labels,
+                nextNodeId,
+                nextLabelId,
+                nextConnectionId,
+                recentColors
+            };
+            const dataStr = JSON.stringify(dataToSave, null, 2);
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'flowchart.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        loadBtn.addEventListener('click', () => {
+            fileLoader.click();
+        });
+
+        fileLoader.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data && data.nodes && data.connections && data.labels) {
+                        history = [];
+                        historyIndex = -1;
+                        loadState(data);
+                        saveState();
+                    } else {
+                        alert('Invalid flowchart file format.');
+                    }
+                } catch (err) {
+                    alert('Error loading or parsing file.');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            fileLoader.value = null;
+        });
         
         mainTitle.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -667,6 +760,7 @@
                     case 'edit': startInlineEditing(selectedItem); break;
                     case 'change-color': 
                         if(selectedItem.type === 'node' || selectedItem.type === 'label' || selectedItem.type === 'connection') {
+                            itemToColor = selectedItem; // Set the item to be colored
                             colorPicker.style.left = `${lastRightClickPos.x}px`;
                             colorPicker.style.top = `${lastRightClickPos.y}px`;
                             setTimeout(() => {
@@ -719,11 +813,19 @@
             }
         });
         
-        colorPicker.addEventListener('input', (e) => {
-            if (selectedItem && (selectedItem.type === 'node' || selectedItem.type === 'label' || selectedItem.type === 'connection')) {
-                selectedItem.color = e.target.value;
+        colorPicker.addEventListener('change', (e) => {
+            if (itemToColor) {
+                const newColor = e.target.value;
+                itemToColor.color = newColor;
+
+                let updatedRecentColors = recentColors.filter(c => c !== newColor);
+                updatedRecentColors.unshift(newColor);
+                recentColors = updatedRecentColors.slice(0, 3);
+                
+                updateRecentColorsUI();
                 draw();
                 saveState();
+                itemToColor = null; // Reset after use
             }
         });
         
@@ -810,7 +912,7 @@
             const dists = {
                 top: Math.abs(pos.y - node.y),
                 bottom: Math.abs(pos.y - (node.y + node.height)),
-                left: Math.abs(pos.x - node.x), 
+                left: Math.abs(pos.x - node.x),
                 right: Math.abs(pos.x - (node.x + node.width))
             };
             return Object.keys(dists).reduce((a, b) => dists[a] < dists[b] ? a : b);
@@ -823,7 +925,7 @@
             resizeCanvas();
             if (nodes.length === 0) {
                 saveState(); 
-                addNode(canvas.width / 2 - 75, canvas.height / 3, "Start");
+                addNode(canvas.width / 2 - 75, canvas.height / 3, "Start: Incident Reported");
             }
         };
     </script>
