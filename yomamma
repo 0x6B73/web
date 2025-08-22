@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yo Mamma Joke Randomizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-2xl shadow-lg p-8 md:p-12 max-w-2xl w-full text-center">
+        <!-- Header Section -->
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            Yo Mamma Joke Randomizer
+        </h1>
+        <p class="text-gray-500 mb-8">Click the button to get a fresh, randomly generated joke.</p>
+
+        <!-- Joke Display Area -->
+        <div id="joke-display" class="bg-gray-50 border border-gray-200 rounded-lg p-6 min-h-[120px] flex items-center justify-center mb-8">
+            <p class="text-xl md:text-2xl font-medium text-gray-700 leading-relaxed">
+                <!-- Joke will be inserted here by JavaScript -->
+            </p>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generate-btn" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-100">
+            Generate New Joke
+        </button>
+    </div>
+
+    <script>
+        // --- EDIT YOUR LISTS HERE ---
+        // This is the only part of the code you need to change.
+        // Just add or remove items from these lists inside the quotes.
+
+        const adjectives = [
+            "fat", "stupid", "ugly", "old", "poor", "short", "lazy", "classless", "hairy", "smelly",
+            "clumsy", "forgetful", "slow", "loud", "cheap", "boring", "gullible", "awkward", "messy", "nosy",
+            "dull", "grumpy", "selfish", "weird", "scary", "bony", "greasy", "annoying", "clueless", "primitive",
+            "dusty", "crusty", "soggy", "lumpy", "spongy", "moldy", "stale", "bland", "tacky", "gaudy",
+            "wrinkly", "spotty", "flabby", "pale", "frail", "wobbly", "shaky", "dizzy", "sleepy", "cranky",
+            "jumpy", "goofy", "nutty", "zany", "loopy", "ditzy", "spacey", "dreamy", "outdated", "ancient",
+            "prehistoric", "fossilized", "rusty", "corroded", "broken", "useless", "pointless", "confused", "lost", "misguided",
+            "unlucky", "cursed", "haunted", "spooky", "eerie", "gloomy", "dark", "shadowy", "murky", "foggy",
+            "slippery", "sticky", "slimy", "oily", "bumpy", "rough", "scratchy", "itchy", "prickly", "thorny",
+            "dense", "thick", "heavy", "solid", "tough", "hard", "rigid", "stiff", "frozen", "cold"
+        ];
+
+        const actions = [
+            "sits around the house", "jumps for joy", "goes to the barber", "wears a yellow raincoat", "eats a bowl of cereal",
+            "steps on a scale", "gets in an elevator", "walks past a TV", "buys a new hat", "tries to cook dinner",
+            "goes to the zoo", "sends a text message", "reads a book", "watches a movie", "listens to music", "tells a joke",
+            "takes a selfie", "goes for a walk", "tries to run", "climbs a flight of stairs", "goes swimming", "rides a bike",
+            "plays a video game", "answers the phone", "opens the fridge", "looks in the mirror", "gets on the bus",
+            "goes to the library", "tries to whisper", "does a push-up", "sits on a beanbag", "orders a pizza",
+            "goes to a concert", "tries to parallel park", "waters the plants", "builds a snowman", "goes bowling",
+            "tries to use a computer", "gets her picture taken", "walks into a room", "puts on lipstick", "buys a lottery ticket",
+            "goes to the beach", "stands on a street corner", "applies for a job", "goes to the doctor", "eats at a buffet",
+            "tries to sing", "dances at a party", "wears a watch on both wrists", "looks at the sky", "goes camping",
+            "tries to do magic", "walks through a metal detector", "gets on a seesaw", "eats a cookie", "drinks a glass of water",
+            "tries to do a cartwheel", "puts on her shoes", "goes to the gym", "walks by a construction site", "tries to tell time",
+            "goes on a rollercoaster", "visits a museum", "tries to solve a puzzle", "gets a haircut", "walks into a spiderweb",
+            "eats an apple", "looks for her keys", "tries to hula hoop", "goes to a farm", "milks a cow",
+            "tries to fly a kite", "jumps on a trampoline", "goes to a haunted house", "reads the newspaper", "makes a sandwich",
+            "tries to use chopsticks", "goes ice skating", "plays chess", "tries to whistle", "gets a tan",
+            "goes through a drive-thru", "tries to change a lightbulb", "takes a test", "goes to a wedding", "wears headphones",
+            "tries to catch a fish", "goes on a hike", "rides a horse", "tries to bake a cake", "visits a castle",
+            "goes to a comedy club", "tries to juggle", "walks on a treadmill", "eats a salad", "tries to use a pogo stick"
+        ];
+
+        const otherActions = [
+            "she REALLY sits around the house", "she gets stuck in the air", "he quits", "the school bus has to slow down",
+            "it says 'To be continued...'", "it can't go up", "a bunch of bees try to pollinate her", "she blocks the signal",
+            "it has its own zip code", "the smoke alarm goes off", "the monkeys throw poop at her", "she uses all the data",
+            "the pages are blank", "she's in the credits", "the band stops playing", "nobody laughs", "the camera breaks",
+            "the GPS reroutes", "the earth slows down", "she gets winded", "she causes a tsunami", "the chain breaks",
+            "the controller dies", "it's a wrong number", "the light goes out", "it cracks", "the driver waits for her",
+            "the books are all about her", "the whole neighborhood hears it", "the ground shakes", "the beanbag pops",
+            "they run out of food", "the speakers blow out", "she hits every car", "they drown", "it turns into a snow pile",
+            "the pins fall down before she rolls", "it gets a virus", "the film runs out", "the lights dim",
+            "it smears on her whole face", "she wins, but the prize is debt", "the tide goes out and never comes back",
+            "she causes a traffic jam", "they offer her one", "the doctor needs a second opinion", "the restaurant closes",
+            "the microphone feeds back", "the disco ball falls", "she needs two", "the clouds spell her name",
+            "the bears hibernate", "the rabbit runs away", "it sets off the airport security", "the other person is still on the ground",
+            "it turns into crumbs", "it evaporates", "the world turns upside down", "the laces snap", "the machines get tired",
+            "the workers whistle at the ground", "the clock stops", "the ride breaks down", "the statues cry",
+            "the pieces give up", "the salon runs out of scissors", "the spider moves out", "the worms are scared",
+            "she can't find them because they're on her head", "the hoop breaks", "the chickens lay scrambled eggs",
+            "the cow gives buttermilk", "the kite won't come down", "she goes through the bottom", "the ghosts leave",
+            "the news is all about her", "she uses the whole loaf of bread", "the noodles run away", "she falls through the ice",
+            "the king surrenders", "she's the only one not laughing", "the sun gets jealous", "they ask for her autograph",
+            "it takes a team of people", "the pencil breaks", "the cake falls", "the music is just her footsteps",
+            "the fish jump out of the water", "the trail ends", "the horse needs a chiropractor", "the oven quits",
+            "the drawbridge collapses", "the comedian asks for her material", "the balls hide", "the belt melts",
+            "the lettuce wilts", "the spring gives up"
+        ];
+
+        // --- END OF EDITABLE LISTS ---
+        // (No need to change anything below this line)
+
+        // Get the HTML elements we need to work with
+        const jokeDisplay = document.getElementById('joke-display').querySelector('p');
+        const generateBtn = document.getElementById('generate-btn');
+
+        // Function to pick a random item from a list (an array)
+        function getRandomItem(arr) {
+            // Calculate a random index number based on the array's length
+            const randomIndex = Math.floor(Math.random() * arr.length);
+            // Return the item at that random index
+            return arr[randomIndex];
+        }
+
+        // Function to create and display a new joke
+        function generateJoke() {
+            // Get one random piece from each list
+            const adjective = getRandomItem(adjectives);
+            const action = getRandomItem(actions);
+            const otherAction = getRandomItem(otherActions);
+
+            // Build the joke string using the template format
+            const joke = `Yo Mamma so ${adjective}, when she ${action}, ${otherAction}.`;
+
+            // Display the joke on the page by setting the text content of our display element
+            jokeDisplay.textContent = joke;
+        }
+
+        // Add an event listener to the button. When it's clicked, run the generateJoke function.
+        generateBtn.addEventListener('click', generateJoke);
+
+        // --- Initial Load ---
+        // Generate a joke right away when the page first loads so it's not empty.
+        generateJoke();
+
+    </script>
+
+</body>
+</html>
