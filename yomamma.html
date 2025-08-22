@@ -38,66 +38,45 @@
         // --- EDIT LISTS HERE ---
 
         const adjectives = [
-            "fat", "stupid", "ugly", "old", "poor", "short", "lazy", "classless", "hairy", "smelly",
-            "clumsy", "forgetful", "slow", "loud", "cheap", "boring", "gullible", "awkward", "messy", "nosy",
-            "dull", "grumpy", "selfish", "weird", "scary", "bony", "greasy", "annoying", "clueless", "primitive",
-            "dusty", "crusty", "soggy", "lumpy", "spongy", "moldy", "stale", "bland", "tacky", "gaudy",
-            "wrinkly", "spotty", "flabby", "pale", "frail", "wobbly", "shaky", "dizzy", "sleepy", "cranky",
-            "jumpy", "goofy", "nutty", "zany", "loopy", "ditzy", "spacey", "dreamy", "outdated", "ancient",
-            "prehistoric", "fossilized", "rusty", "corroded", "broken", "useless", "pointless", "confused", "lost", "misguided",
-            "unlucky", "cursed", "haunted", "spooky", "eerie", "gloomy", "dark", "shadowy", "murky", "foggy",
-            "slippery", "sticky", "slimy", "oily", "bumpy", "rough", "scratchy", "itchy", "prickly", "thorny",
-            "dense", "thick", "heavy", "solid", "tough", "hard", "rigid", "stiff", "frozen", "cold"
+          "clueless", "awkward", "chaotic", "dramatic", "haunted", "confused", "delusional", "outdated", "zany", "gullible",
+          "noisy", "extra", "needy", "moody", "messy", "slippery", "sticky", "itchy", "cranky", "dizzy",
+          "clunky", "goofy", "spooky", "dusty", "flaky", "tacky", "gaudy", "janky", "wonky", "rusty",
+          "prehistoric", "ancient", "slow", "grumpy", "fragile", "crusty", "unlucky", "basic", "dreamy", "bizarre",
+          "chaotic-neutral", "mid", "vintage (but not in a cool way)", "offline", "overcooked", "bootleg", "expired", "buffering", "extra-dimensional", "unpatched"
         ];
+
 
         const actions = [
-            "sits around the house", "jumps for joy", "goes to the barber", "wears a yellow raincoat", "eats a bowl of cereal",
-            "steps on a scale", "gets in an elevator", "walks past a TV", "buys a new hat", "tries to cook dinner",
-            "goes to the zoo", "sends a text message", "reads a book", "watches a movie", "listens to music", "tells a joke",
-            "takes a selfie", "goes for a walk", "tries to run", "climbs a flight of stairs", "goes swimming", "rides a bike",
-            "plays a video game", "answers the phone", "opens the fridge", "looks in the mirror", "gets on the bus",
-            "goes to the library", "tries to whisper", "does a push-up", "sits on a beanbag", "orders a pizza",
-            "goes to a concert", "tries to parallel park", "waters the plants", "builds a snowman", "goes bowling",
-            "tries to use a computer", "gets her picture taken", "walks into a room", "puts on lipstick", "buys a lottery ticket",
-            "goes to the beach", "stands on a street corner", "applies for a job", "goes to the doctor", "eats at a buffet",
-            "tries to sing", "dances at a party", "wears a watch on both wrists", "looks at the sky", "goes camping",
-            "tries to do magic", "walks through a metal detector", "gets on a seesaw", "eats a cookie", "drinks a glass of water",
-            "tries to do a cartwheel", "puts on her shoes", "goes to the gym", "walks by a construction site", "tries to tell time",
-            "goes on a rollercoaster", "visits a museum", "tries to solve a puzzle", "gets a haircut", "walks into a spiderweb",
-            "eats an apple", "looks for her keys", "tries to hula hoop", "goes to a farm", "milks a cow",
-            "tries to fly a kite", "jumps on a trampoline", "goes to a haunted house", "reads the newspaper", "makes a sandwich",
-            "tries to use chopsticks", "goes ice skating", "plays chess", "tries to whistle", "gets a tan",
-            "goes through a drive-thru", "tries to change a lightbulb", "takes a test", "goes to a wedding", "wears headphones",
-            "tries to catch a fish", "goes on a hike", "rides a horse", "tries to bake a cake", "visits a castle",
-            "goes to a comedy club", "tries to juggle", "walks on a treadmill", "eats a salad", "tries to use a pogo stick"
+          "joins a Zoom call", "opens the microwave", "says 'hi' to Siri", "uses a vending machine", "tries to unlock her phone",
+          "walks into Target", "uses a can opener", "tries to update her status", "talks to Alexa", "opens a bag of chips",
+          "tries to pump gas", "buys gum at checkout", "gets on an escalator", "walks into a revolving door", "posts a TikTok",
+          "tries to read QR code", "goes through airport security", "plays Jenga", "tries to plug in a USB", "walks by a mirror",
+          "tries to pet a cat", "checks her horoscope", "asks for directions", "tries to text with gloves on", "visits IKEA",
+          "goes through revolving doors", "opens a Capri Sun", "sings along in the car", "tries to clap on beat", "asks to speak to the manager",
+          "tries to count change", "enters a password", "tries to scan her face", "takes a personality test", "uses autocorrect",
+          "tries to fold a fitted sheet", "microwaves a fork", "types in all caps", "tries to mute a group chat", "does yoga",
+          "sets a reminder", "asks a rhetorical question", "drinks almond milk", "tries to use chopsticks", "buys scented candles",
+          "opens a group text", "starts a podcast", "touches the thermostat", "tries to install an app", "buys a smart fridge"
         ];
 
+
         const otherActions = [
-            "she REALLY sits around the house", "she gets stuck in the air", "he quits", "the school bus has to slow down",
-            "it says 'To be continued...'", "it can't go up", "a bunch of bees try to pollinate her", "she blocks the signal",
-            "it has its own zip code", "the smoke alarm goes off", "the monkeys throw poop at her", "she uses all the data",
-            "the pages are blank", "she's in the credits", "the band stops playing", "nobody laughs", "the camera breaks",
-            "the GPS reroutes", "the earth slows down", "she gets winded", "she causes a tsunami", "the chain breaks",
-            "the controller dies", "it's a wrong number", "the light goes out", "it cracks", "the driver waits for her",
-            "the books are all about her", "the whole neighborhood hears it", "the ground shakes", "the beanbag pops",
-            "they run out of food", "the speakers blow out", "she hits every car", "they drown", "it turns into a snow pile",
-            "the pins fall down before she rolls", "it gets a virus", "the film runs out", "the lights dim",
-            "it smears on her whole face", "she wins, but the prize is debt", "the tide goes out and never comes back",
-            "she causes a traffic jam", "they offer her one", "the doctor needs a second opinion", "the restaurant closes",
-            "the microphone feeds back", "the disco ball falls", "she needs two", "the clouds spell her name",
-            "the bears hibernate", "the rabbit runs away", "it sets off the airport security", "the other person is still on the ground",
-            "it turns into crumbs", "it evaporates", "the world turns upside down", "the laces snap", "the machines get tired",
-            "the workers whistle at the ground", "the clock stops", "the ride breaks down", "the statues cry",
-            "the pieces give up", "the salon runs out of scissors", "the spider moves out", "the worms are scared",
-            "she can't find them because they're on her head", "the hoop breaks", "the chickens lay scrambled eggs",
-            "the cow gives buttermilk", "the kite won't come down", "she goes through the bottom", "the ghosts leave",
-            "the news is all about her", "she uses the whole loaf of bread", "the noodles run away", "she falls through the ice",
-            "the king surrenders", "she's the only one not laughing", "the sun gets jealous", "they ask for her autograph",
-            "it takes a team of people", "the pencil breaks", "the cake falls", "the music is just her footsteps",
-            "the fish jump out of the water", "the trail ends", "the horse needs a chiropractor", "the oven quits",
-            "the drawbridge collapses", "the comedian asks for her material", "the balls hide", "the belt melts",
-            "the lettuce wilts", "the spring gives up"
+          "the Wi-Fi disconnects", "the group chat silences itself", "she gets flagged by CAPTCHA", "she activates airplane mode on a toaster",
+          "the fire alarm starts crying", "autocorrect gives up", "the algorithm files a restraining order", "the Roomba flees the room",
+          "Siri stops answering", "her shadow leaves", "she’s shadowbanned IRL", "the GPS files a complaint", "the dog starts therapy",
+          "the playlist skips her song out of mercy", "the fridge locks itself", "the AI asks for a break", "the moon phases out",
+          "Netflix auto-logs out", "the password resets itself", "the microwave says 'nah'", "the toaster ejects across the room",
+          "a single bean falls from the sky", "her phone breaks up with her", "the emojis stop loading", "the app crashes in fear",
+          "the weather changes", "the plants start talking", "the chair slides away", "a squirrel presses charges", "her notifications scream",
+          "she gets reverse-phished", "the smart speaker screams", "the TV turns off out of respect", "the mouse unplugs itself",
+          "Bluetooth files a report", "gravity takes a break", "the curtains close themselves", "the YouTube comments get nicer",
+          "the birds fly backward", "the music apologizes", "she causes a solar flare", "the clouds log off", "her selfie gets censored",
+          "the fire drill becomes permanent", "Spotify blocks her", "she gets ghosted by her own reflection", "the CAPTCHA fails her",
+          "the app uninstalls itself", "her horoscope says 'don’t'", "she trends on accident", "the satellite blinks twice",
+          "Google stops auto-filling", "Clippy reactivates to help", "the calendar skips her birthday", "the air gets awkward",
+          "the antivirus resigns", "the moon sighs", "the plants evolve defense mechanisms"
         ];
+
 
         // --- END OF EDITABLE LISTS ---
         // (No need to change anything below this line)
